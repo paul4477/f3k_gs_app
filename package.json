@@ -1,0 +1,23 @@
+{
+  "name": "f3k_score_app",
+  "version": "1.0.0",
+  "description": "Scoring for F3K Competition with Gliderscore",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app",
+    "dev": "nodemon app"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fast-csv/format": "^4.0.2",
+    "bunyan": "^1.8.12",
+    "csv-parse": "^4.8.5",
+    "csv-parser": "^2.3.2",
+    "express": "^4.17.1",
+    "ftp-srv": "^4.3.1",
+    "ftpd": "^0.2.15",
+    "serialport": "^8.0.7",
+    "timesync": "^1.0.5"
+  }
+}

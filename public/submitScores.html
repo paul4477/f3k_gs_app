@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<meta name="apple-mobile-web-app-capable" content- "yes">
+
+<meta name="viewport" content="user-scalable=no, width=device-width" />
+
+<head>
+    <!-- note: for support on older browsers, you will need to load es5-shim and es6-shim -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.0.5/es5-shim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.23.0/es6-shim.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="/api/timesync/timesync.js"></script>
+    <script src="/js/pressure.js"></script>
+    <script src="/js/stopwatch.js"></script>
+    <script src="/js/slotTimer.js"></script>
+    <script src="/js/jquery.ui.touch-punch.min.js"></script>
+
+    <link rel="stylesheet" href="/stylesheets/timer.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+</head>
+
+<script>
+    function step() {
+        // Slot Timer
+        //
+        if (slotTimer) {
+            slotTimer.step()
+
+            invertedDiv = document.querySelector('#slot');
+            if (slotTimer.canFly == false) {
+                invertedDiv.style.background = "#030";
+                invertedDiv.style.color = "#ffffb3"
+            } else {
+                invertedDiv.style.background = "#ffffb3";
+                invertedDiv.style.color = "#030"
+            }
+        }
+
+        window.requestAnimationFrame(step);
+    };
+
+    function validateTime(event) {
+        // Assume input is a string of digits
+        // Assume that we exclude leading zeros and it is min <= 9, secs <=59 (with leading zero) and 0 <= tenths <=9
+        let inputString = event.target.value;
+        const max = event.target.maximum;
+        if (inputString.length > 5) { alert("Input is longer than expected.") };
+        const isnum = /^\d+$/.test(inputString);
+        if (!isnum) {
+            alert("Only use digits for input.");
+            event.target.value = "";
+            return;
+        };
+        const tenths = inputString.slice(-1);
+
+        let mins = secs = "00";
+        inputString = inputString.slice(0, -1);
+        console.log("0:", inputString, mins, secs, tenths);
+        if (inputString.length == 1) {
+
+            secs = "0" + inputString.slice(-1);
+            mins = "00";
+            //inputString = inputString.slice(0,-2);
+            console.log("1:", inputString, mins, secs, tenths);
+        }
+        else if (inputString.length > 1) {
+            secs = inputString.slice(-2);
+            if (parseInt(secs) > 59) { alert("Seconds must be < 60") };
+            inputString = inputString.slice(0, -2);
+            console.log("2:", inputString, mins, secs, tenths);
+            if (inputString.length == 1) {
+                mins = "0" + inputString;
+                console.log("3:", inputString, mins, secs, tenths);
+            }
+            else if (inputString.length > 1) {
+                mins = inputString;
+                if (parseInt(mins) > 9) { alert("That seems like too many minutes") };
+            }
+            else {
+                mins = "00";
+                console.log("4:", inputString, mins, secs, tenths);
+            }
+        }
+        realTime = (parseInt(mins) * 60) + parseInt(secs) + (parseInt(tenths) / 10);
+
+        if (event.target.maximum < realTime) { alert("Time entered exceeds maximum") };
+
+        event.target.value = `${mins}:${secs}.${tenths}`;
+    }
+
+
+
+
+    function pageSetup() {
+        // Try to disable zooming and scrolling
+        document.addEventListener("touchstart", function (event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, false);
+
+        slotRow = document.querySelector('#countdown');
+        slotTimer = new SlotTimer(slotRow, '/api/slotInfo');
+        slotTimer.updateSlotInfo();
+
+        setInterval(() => {
+            slotTimer.updateSlotInfo()
+        }, 27000);
+
+        // Add listener for group, round and type changes
+        $(slotTimer).on("slotUpdated", (e) => {
+            document.querySelector('#slotStatus').innerText = slotTimer.slotLabel;
+            document.querySelector('#groupNum').innerText = slotTimer.group;
+            document.querySelector('#roundNum').innerText = slotTimer.round;
+
+        });
+
+        let url = new URL(window.location);
+
+        const resultID = url.searchParams.get("result");
+        let results = null;
+        //const rawTimes = null;
+        //console.log(rawTimes);
+
+        $.getJSON(`/api/slotScore/${resultID}`, (data) => {
+
+            //const results = data.result.times.filter(time => time.valid === true);
+            results = data.result.times;
+            //results =
+
+
+            output = document.querySelector('#results');
+
+            for (i = 0; i < results.length; i += 1) {
+
+                let newTime = document.createElement('li');
+                //newTime.className = "ui-state-default";
+
+                newTime.innerText = formatTime(results[i].time);
+                newTime.className = "fullWidth"
+                if (results[i].valid == false) { newTime.style.textDecoration = "line-through"; }
+
+                output.appendChild(newTime);
+            }
+
+            function drawScores(data) {
+                scoreHolder = document.querySelector('#roundScores');
+                while (data.length > 0) {
+                    scoreInfo = data.shift();
+                    let newResult = document.createElement('div');
+                    score = scoreInfo[0];
+                    maximum = scoreInfo[1];
+
+                    scoreInput = document.createElement('input');
+                    scoreInput.type = "text";
+                    scoreInput.value = formatTime(score);
+                    scoreInput.className = "scoreInput";
+                    scoreInput.pattern = "[0-9]*";
+                    scoreInput.inputmode = "numeric";
+                    scoreInput.maximum = maximum;
+                    $(scoreInput).on("focusin", (e) => { e.target.value = "" });
+                    $(scoreInput).on("change", validateTime);
+
+                    newResult.appendChild(scoreInput);
+
+                    maxLabel = document.createElement('div');
+                    //maxLabel.type = "text";
+                    maxLabel.innerText = `Max:\n${formatTime(maximum, false)}`;
+                    maxLabel.className = "maxLabel";
+                    newResult.appendChild(maxLabel);
+
+
+                    //newResult.innerText = `${}, Max: ${formatTime(score[1], false)}`;
+                    //newResult.id = "fullwidth";
+                    scoreHolder.appendChild(newResult);
+                }
+                //document.querySelector('#roundScores').innerText = JSON.stringify(data);
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/api/tasks/score",
+                contentType: "application/json",
+                data: JSON.stringify(results),
+
+                success: function (data) {
+                    drawScores(data);
+                }
+            });
+
+        });
+        // To DO
+        // Select pilot to assign to
+        // Put scores into task appropriate format
+
+
+
+
+        // Confirm submission and forward to round results
+        // modal confirmation: https://jqueryui.com/dialog/#modal-confirmation
+
+        // Results page results shuld update on their own (every 10 seconds or so)
+        // Should allow viewing of unassigned result (no pilot) - click to update
+
+        // should be able to identify timer - setup screen on first use - save in cookie (forever) change via settings button
+
+        // Make results draggable
+        /*         $(function () {
+                    $(".sortable").sortable({
+                        placeholder: "ui-state-highlight"
+                    });
+        
+                    $(".sortable").disableSelection();
+                }); */
+        function addPenalty() {
+            //alert("Add penalty called")
+            dialog.dialog("close");
+        }
+
+        dialog = $("#dialog-form").dialog({
+            autoOpen: false,
+            height: "auto",
+            width: "80%",
+            modal: true,
+            buttons: {
+                "Add Penalty": addPenalty,
+                Cancel: function () {
+                    dialog.dialog("close");
+                }
+            },
+            close: function () {
+                //alert("Close called")
+                //form[0].reset();
+                //allFields.removeClass("ui-state-error");
+            }
+        });
+        $("#addPenalty").on("click", function () {
+            dialog.dialog("open");
+        });
+    };
+
+    // Startup...
+
+    let slotTimer = null;
+    let rawTimes = [];
+
+    window.requestAnimationFrame(step);
+</script>
+
+
+
+
+<body onload="pageSetup();">
+
+
+    <div id="dialog-form" style="display:none" title="Penalty">
+        <form>
+            <fieldset>
+                <label for="penalty">Penalty</label>
+                <input type="text" name="name" id="name" pattern="[0-9]*" value="100"
+                    class="text ui-widget-content ui-corner-all">
+                <label for="comment">Comment</label>
+                <textarea rows="2"></textarea>
+                <!--<input type="textbox" name="email" id="email" value="" class="text ui-widget-content ui-corner-all">-->
+
+                <!-- Allow form submission with keyboard without duplicating the dialog button -->
+                <input type="submit" tabindex="-1" style="position:absolute; top:-100px">
+            </fieldset>
+        </form>
+    </div>
+
+
+
+    <div id="slot" class="row">
+        <div id="slotInfo" class="row">
+            <div id="slotInfo" class="fullcolumn"><b>Round: <span id="roundNum"></span></b> Group: <span
+                    id="groupNum"></span>
+            </div>
+        </div>
+
+        <div id="slotTimer" class="row">
+            <div class="countdown"><span id="countdown">--:--</span></div>
+            <div id="slotStatus"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="column">
+            Timer:
+            <select class="select-css">
+                <option value="-1"></option>
+                <option value="0">New...</option>
+                <option value="1">Paul Robinson</option>
+            </select>
+        </div>
+        <div class="column">
+            Pilot:
+            <select class="select-css">
+                <option value="-1"></option>
+                <option value="0">New...</option>
+                <option value="1">Paul Robinson</option>
+            </select>
+        </div>
+    </div>
+    <ul class="menu">
+        <!--<li><a href="javascript:window.history.back()" id="scoreButton">Back</a></li>-->
+        <!--<li><a href="news.asp">Clear</a></li>-->
+        <li style="float:right; border-left: 1px solid #bbb;">
+            <a href="settings.html">Submit</a>
+        </li>
+    </ul>
+
+    <div class="row">
+        <div class="column" style="width: 35%">
+            Raw Times:
+            <ul id="results"></ul>
+        </div>
+        <div class="column" style="width: 65%">
+            <div id="roundScores"></div>
+            Penalty: <button id="addPenalty">Add...</button>
+        </div>
+    </div>
+
+
+
+</body>
+
+</html>

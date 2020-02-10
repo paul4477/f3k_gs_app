@@ -1,0 +1,77 @@
+
+.countdown, #slotStatus {
+    font-size: 16vh;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    float: left;
+}
+ #slotInfo {
+    font-size: 11vh;
+}
+
+
+/* Create three equal columns that floats next to each other */
+
+.column {
+    float: left;
+    width: 50%;
+    #padding: 0px;
+}
+
+.fullcolumn {
+    float: left;
+    width: 100%;
+    text-align: center;
+    #padding: 3px;
+}
+
+.row {
+    border-bottom: 1px solid black;
+    padding-bottom: 2px;
+    #margin-bottom: 2px;
+}
+
+/* Clear floats after the columns */
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+
+
+ul.menu {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+    width: 100%;
+}
+
+.ul.menu:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+ul.menu li {
+    float: left;
+    border-right: 1px solid #bbb;
+}
+
+ul.menu li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+/* Change the link color to #111 (black) on hover */
+
+ul.menu li a:hover {
+    background-color: #111;
+}

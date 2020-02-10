@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<meta name="apple-mobile-web-app-capable" content- "yes">
+
+<meta name="viewport" content="user-scalable=no, width=device-width" />
+
+<head>
+    <!-- note: for support on older browsers, you will need to load es5-shim and es6-shim -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.0.5/es5-shim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.23.0/es6-shim.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.12.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="/api/timesync/timesync.js"></script>
+    <script src="/js/pressure.js"></script>
+    <script src="/js/stopwatch.js"></script>
+    <script src="/js/slotTimer.js"></script>
+    <script src="/js/jquery.ui.touch-punch.min.js"></script>
+
+
+
+    <link rel="stylesheet" href="/stylesheets/timer.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+</head>
+
+<script>
+    // get notified on changes in the offset
+    //ts.on('change', function (offset) {
+    //  document.querySelector('.delta').innerText = offset + ' ms';
+    //});
+    function blockMove(event) {
+        // Tell Safari not to move the window.
+        event.preventDefault();
+        //alert("blocked");
+
+    }
+
+    function step() {
+        // Slot Timer
+        //
+        if (slotTimer) {
+            slotTimer.step()
+
+            invertedDiv = document.querySelector('#slot');
+            if (slotTimer.canFly == false) {
+                invertedDiv.style.background = "#030";
+                invertedDiv.style.color = "#ffffb3"
+            } else {
+                invertedDiv.style.background = "#ffffb3";
+                invertedDiv.style.color = "#030"
+            }
+        }
+        // Flight Timer
+        //console.log(stopwatch)
+        if (stopwatch && stopwatch.running)
+            stopwatch.step();
+        window.requestAnimationFrame(step);
+    };
+
+    function pageSetup() {
+        // Try to disable zooming and scrolling
+        document.addEventListener("touchstart", function (event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, false);
+
+        var lastTap = 0;
+
+        function checkDouble(event) {
+            var currentTime = new Date().getTime();
+            var tapLength = currentTime - lastTap;
+            if (tapLength < 500 && tapLength > 0) {
+                if (event.target.style.textDecoration == "line-through") {
+                    event.target.style.textDecoration = null;
+                    slotResults.times[slotResults.times.length - 1].valid = true;
+                } else {
+                    event.target.style.textDecoration = "line-through";
+                    slotResults.times[slotResults.times.length - 1].valid = false;
+                }
+                event.preventDefault();
+                //console.log(slotResults.times[slotResults.times.length - 1]);
+            }
+            lastTap = currentTime;
+        }
+
+
+        // Locate doc elements and pass to stopwatch constructor
+        button = document.querySelector('.button_start');
+        clock = document.querySelector('#stopwatchContainer');
+        resultList = document.querySelector('#results');
+        lastResultList = document.querySelector('#lastResult');
+
+        stopwatch = new Stopwatch(button, clock);
+        // Add listener for results
+        $(stopwatch).on("resultsUpdated", (e) => {
+
+            var {
+                results: times
+            } = stopwatch;
+
+            if (slotResults.group == 0) {
+                slotResults.round = slotTimer.round;
+                slotResults.group = slotTimer.group;
+            }
+            slotResults.times.push({ valid: true, time: times[times.length - 1] });
+
+            let newTime = document.createElement('li');
+            newTime.className = "ui-state-default";
+
+            newTime.innerText = formatTime(times[times.length - 1]);
+            newTime.addEventListener('click', checkDouble);
+            const oldStyle = newTime.id;
+            //newTime.id = "first";
+
+            if (lastResultList.hasChildNodes()) {
+                let oldResult = lastResultList.firstChild;
+                oldResult.removeEventListener('click', checkDouble);
+                lastResultList.removeChild(oldResult);
+
+                if (resultList.hasChildNodes()) { resultList.insertBefore(oldResult, resultList.firstChild); }
+                else { resultList.appendChild(oldResult); }
+                lastResultList.appendChild(newTime);
+            }
+            else { lastResultList.appendChild(newTime); }
+            // Allow page to scroll if we have more results
+            if (times.length > 6) { document.body.removeEventListener('touchmove', blockMove, { passive: false }); }
+        });
+
+        slotRow = document.querySelector('#countdown');
+        slotTimer = new SlotTimer(slotRow, '/api/slotInfo');
+        slotTimer.updateSlotInfo();
+        setInterval(() => {
+            slotTimer.updateSlotInfo()
+        }, 27000);
+        // Add listener for group, round and type changes
+        $(slotTimer).on("slotUpdated", (e) => {
+            document.querySelector('#slotStatus').innerText = slotTimer.slotLabel;
+            document.querySelector('#groupNum').innerText = slotTimer.group;
+            document.querySelector('#roundNum').innerText = slotTimer.round;
+
+        });
+        scoreButton = document.querySelector('#scoreButton')
+
+        scoreButton.addEventListener("click", (event) => {
+
+            event.preventDefault();
+            if (slotResults.times.length < 1) {
+                alert("No times recorded");
+                return
+            };
+
+            // Check scores exist
+            // if they do 
+            function submitAndGo() {
+                $.ajax({
+                    type: "POST",
+                    url: "/api/slotScore",
+                    contentType: "application/json",
+                    data: JSON.stringify(slotResults),
+
+                    success: function (data) {
+                        params = $.param({ "result": data.id });
+                        window.location.href = `/ui/scoring?${params}`
+                    }
+                });
+
+                $(this).dialog("close");
+            }
+
+            $("#dialog-confirm").dialog({
+                resizable: false,
+                height: "auto",
+                width: "80%",
+                modal: true,
+                buttons: {
+                    "Submit Times": submitAndGo,
+                    Cancel: function () {
+                        $(this).dialog("close");
+                    }
+                }
+            });
+
+
+
+
+
+            //$.post("/slotScore", slotResults, function(data){alert(data)});
+
+            //console.log(s);
+            //alert(slotResults);
+            //form.jsonResults.value = JSON.stringify(slotResults);
+            //console.log(form);
+            //console.log(form.result.value);
+            //alert(form);
+            //form.submit();
+
+
+        }, false);
+
+        // Make results draggable
+        $(function () {
+            $(".sortable").sortable({
+                placeholder: "ui-state-highlight"
+            });
+
+            $(".sortable").disableSelection();
+        });
+
+
+
+    };
+
+    // Startup...
+
+    stopwatch = null;
+    slotTimer = null;
+    slotResults = {
+        group: 0,
+        round: 0,
+        pilot: null,
+        times: [],
+    }
+
+    $(function () {
+        document.body.addEventListener('touchmove', blockMove, { passive: false });
+    });
+    window.requestAnimationFrame(step);
+
+</script>
+
+
+
+
+<body onload="pageSetup();">
+    <div id="dialog-confirm" style="display:none" title="Submit times?">
+        <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>Do you want to
+            complete round timing and submit the times?</p>
+    </div>
+
+
+    <div class="row" id="timing">
+        <div id="stopwatchContainer" class="fullcolumn">
+
+        </div>
+    </div>
+    <ul class="menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="" id="scoreButton">Submit</a></li>
+        <li><a href="">Clear</a></li>
+        <li style="float:right; border-left: 1px solid #bbb;">
+            <a href="/ui/settings">Settings</a>
+        </li>
+    </ul>
+
+    <div id="slot">
+        <div id="slotInfo" class="row">
+            <div id="slotInfo" class="fullcolumn"><b>Round: <span id="roundNum"></span></b> Group: <span
+                    id="groupNum"></span>
+            </div>
+        </div>
+
+        <div id="slotTimer" class="row">
+            <div class="countdown"><span id="countdown">--:--</span></div>
+            <div id="slotStatus"></div>
+        </div>
+    </div>
+
+    <div>
+        <div class="fullcolumn">
+            <ul id="lastResult"></ul>
+        </div>
+    </div>
+    <div>
+        <div class="column">
+            <ul id="results" class="sortable"></ul>
+        </div>
+    </div>
+
+    <div class="button_start"></div>
+
+</body>

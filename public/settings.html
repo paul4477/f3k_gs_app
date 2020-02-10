@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<meta name="apple-mobile-web-app-capable" content- "yes">
+
+<meta name="viewport" content="user-scalable=no, width=device-width" />
+
+<head>
+    <!-- note: for support on older browsers, you will need to load es5-shim and es6-shim -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.0.5/es5-shim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.23.0/es6-shim.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.12.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="/api/timesync/timesync.js"></script>
+    <script src="/js/pressure.js"></script>
+    <script src="/js/stopwatch.js"></script>
+    <script src="/js/slotTimer.js"></script>
+    <script src="/js/jquery.ui.touch-punch.min.js"></script>
+
+
+
+    <link rel="stylesheet" href="/stylesheets/timer.css">
+    <link rel="stylesheet" href="/stylesheets/just_slot.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+</head>
+
+<script>
+    // get notified on changes in the offset
+    //ts.on('change', function (offset) {
+    //  document.querySelector('.delta').innerText = offset + ' ms';
+    //});
+    function blockMove(event) {
+        // Tell Safari not to move the window.
+        event.preventDefault();
+        //alert("blocked");
+
+    }
+
+
+
+</script>
+
+
+
+
+<body>
+    <ul class="menu">
+        <li><a href="/" id="scoreButton">Home</a></li>
+    </ul>
+
+
+</body>
