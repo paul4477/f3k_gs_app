@@ -1,8 +1,10 @@
 const ftpServer = require('ftp-srv'); 
+const config = require('config');
   
 const server = new ftpServer({ 
-    url: 'ftp://0.0.0.0:21',
-    pasv_url: "192.168.64.118",
+    //url: 'ftp://0.0.0.0:21',
+    url: `ftp://${config.get("ftp.IP")}:${config.get("ftp.port")}`,
+    pasv_url: config.get("ftp.pasvIP"),
     pasv_min: 8400,
     pasv_max: 8500,
     //timeout: 30,
@@ -28,7 +30,7 @@ server.on('client-error', ({ context, error }) => {
   }); 
   
 server.listen().then(()=>{
-  console.log("listening");
+  console.log("listening PASV:",config.get("ftp.pasvIP") );
 })
 
 module.exports = server;

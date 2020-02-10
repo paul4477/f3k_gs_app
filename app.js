@@ -8,12 +8,11 @@ const logger = (req, res, next) => {
   console.log("URL:", req.originalUrl);
   next();
 }
-
 const app = express();
 app.use(logger);
+app.use(express.json());
 
-
-
+// Temp debug/test data
 recordedScores = [
   {"id":1,"result":{"group":"02","round":"01","pilot":null,"times":[{"valid":true,"time":59.3},{"valid":false,"time":119.7},{"valid":true,"time":92.4},{"valid":true,"time":111.0},{"valid":true,"time":220.2}]}},
   {"id":2,"result":{"group":"02","round":"01","pilot":null,"times":[{"valid":true,"time":25.4},{"valid":true,"time":237.3},{"valid":true,"time":45.2}]}},
@@ -25,7 +24,7 @@ recordedScores = [
 ];
 
 
-app.use(express.json());
+// Static files in public
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API and utilities
@@ -43,12 +42,14 @@ var scoringdatadownload = require('./routes/scoringdatadownload');
 app.use('/', scoringdatadownload);
 var scoringdatamanage = require('./routes/scoringdatamanage');
 app.use('/', scoringdatamanage);
+// GliderScore.com FTP emulation
+const ftpd = require('./routes/ftpServer');
 
 // http://gliderscore.com/onlinescores.aspx?ID=1FC5445848ec&T=F
 // Translate this to native score page
 
-const ftpd = require('./routes/ftpServer');
-//console.log(ftpd);
+// set NODE_ENV=pdr-dev
+// to use the pdr-dev config file
 const port = config.get("http.port");
 const host = config.get("http.IP");
 app.listen(port, () => console.log(`Listening on port ${port}`));
