@@ -94,7 +94,10 @@ var runningSlot = {
     }
 };
 
-const port = new SerialPort('/dev/pts/5', function (err) {
+const config = require('config');
+
+
+const port = new SerialPort(config.get('serial'), function (err) {
     if (err) {
         runningSlot.update("R00G00T0000+DT+\n")
         return console.log('Error: ', err.message)

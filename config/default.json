@@ -12,5 +12,6 @@
     "db": {
         "hostname": "localhost",
         "collection": "f3k_test"
-    }
+    },
+    "serial": "/dev/pts/0"
 }
