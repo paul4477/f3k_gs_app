@@ -1,17 +1,19 @@
 
 const express = require('express');
+const config = require('config');
 //const Joi = require('@hapi/joi');
-
-var path = require('path');
+const path = require('path');
 
 const logger = (req, res, next) => {
   console.log("URL:", req.originalUrl);
   next();
 }
 
-
 const app = express();
 app.use(logger);
+
+
+
 recordedScores = [
   {"id":1,"result":{"group":"02","round":"01","pilot":null,"times":[{"valid":true,"time":59.3},{"valid":false,"time":119.7},{"valid":true,"time":92.4},{"valid":true,"time":111.0},{"valid":true,"time":220.2}]}},
   {"id":2,"result":{"group":"02","round":"01","pilot":null,"times":[{"valid":true,"time":25.4},{"valid":true,"time":237.3},{"valid":true,"time":45.2}]}},
@@ -47,5 +49,6 @@ app.use('/', scoringdatamanage);
 
 const ftpd = require('./routes/ftpServer');
 //console.log(ftpd);
-
-app.listen(80, () => console.log('Listening on port 80'));
+const port = config.get("http.port");
+const host = config.get("http.IP");
+app.listen(port, () => console.log(`Listening on port ${port}`));

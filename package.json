@@ -12,6 +12,7 @@
   "dependencies": {
     "@fast-csv/format": "^4.0.2",
     "bunyan": "^1.8.12",
+    "config": "^3.2.5",
     "csv-parse": "^4.8.5",
     "csv-parser": "^2.3.2",
     "express": "^4.17.1",

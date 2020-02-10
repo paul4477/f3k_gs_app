@@ -1,0 +1,16 @@
+{
+    "name": "F3K Scoring App",
+    "http": {
+        "IP": "0.0.0.0", 
+        "port": "80"
+    },
+    "ftp": {
+        "IP": "0.0.0.0",
+        "port": "21",
+        "pasvIP": ""
+    },
+    "db": {
+        "hostname": "localhost",
+        "collection": "f3k_test"
+    }
+}
