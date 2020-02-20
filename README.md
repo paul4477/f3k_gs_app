@@ -1,6 +1,10 @@
 # f3k_gs_app
 Node.js based site for integration with GliderScore
 
+Requires:
+Modified GliderScoreDigitalTimer.exe
+MongoDB
+
 - Install node/npm
 - git clone
 - npm i # from within cloned directory

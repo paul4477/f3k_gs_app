@@ -17,7 +17,7 @@
     <script src="/js/jquery.ui.touch-punch.min.js"></script>
 
     <link rel="stylesheet" href="/stylesheets/timer.css">
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/stylesheets/jquery-ui.css">
 </head>
 
 <script>
@@ -56,22 +56,22 @@
 
         let mins = secs = "00";
         inputString = inputString.slice(0, -1);
-        console.log("0:", inputString, mins, secs, tenths);
+        //console.log("0:", inputString, mins, secs, tenths);
         if (inputString.length == 1) {
 
             secs = "0" + inputString.slice(-1);
             mins = "00";
             //inputString = inputString.slice(0,-2);
-            console.log("1:", inputString, mins, secs, tenths);
+            //console.log("1:", inputString, mins, secs, tenths);
         }
         else if (inputString.length > 1) {
             secs = inputString.slice(-2);
             if (parseInt(secs) > 59) { alert("Seconds must be < 60") };
             inputString = inputString.slice(0, -2);
-            console.log("2:", inputString, mins, secs, tenths);
+            //console.log("2:", inputString, mins, secs, tenths);
             if (inputString.length == 1) {
                 mins = "0" + inputString;
-                console.log("3:", inputString, mins, secs, tenths);
+                //console.log("3:", inputString, mins, secs, tenths);
             }
             else if (inputString.length > 1) {
                 mins = inputString;
@@ -79,12 +79,12 @@
             }
             else {
                 mins = "00";
-                console.log("4:", inputString, mins, secs, tenths);
+                //console.log("4:", inputString, mins, secs, tenths);
             }
         }
         realTime = (parseInt(mins) * 60) + parseInt(secs) + (parseInt(tenths) / 10);
 
-        if (event.target.maximum < realTime) { alert("Time entered exceeds maximum") };
+        if (realTime > event.target.maximum) { alert("Time entered exceeds maximum") };
 
         event.target.value = `${mins}:${secs}.${tenths}`;
     }
@@ -127,7 +127,7 @@
 
             //const results = data.result.times.filter(time => time.valid === true);
             results = data;//.result;
-            
+
             //round = data.result.round;
             //group = data.result.group;
             //results =
@@ -149,7 +149,7 @@
 
             function drawScores(data) {
                 scoreHolder = document.querySelector('#roundScores');
-                if (data.length == 0){
+                if (data.length == 0) {
                     let noResults = document.createElement('div')
                     scoreHolder.appendChild(noResults);
                 }
@@ -184,7 +184,7 @@
                 }
                 //document.querySelector('#roundScores').innerText = JSON.stringify(data);
             };
-            
+
             $.ajax({
                 type: "POST",
                 url: "/api/tasks/score",

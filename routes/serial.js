@@ -110,7 +110,7 @@ var runningSlot = {
 
 const config = require('config');
 
-
+// Try to open serial port, most likely this will not be used
 const port = new SerialPort(config.get('serial'), function (err) {
     if (err) {
         runningSlot.update("R00G00T0000+DT+\n")
@@ -119,18 +119,7 @@ const port = new SerialPort(config.get('serial'), function (err) {
 });
 
 port.on('data', (data) => {
-
     runningSlot.update(data);
-    //console.log(runningSlot.endTime);
-    //end = new Date(runningSlot.endTime);
-    //end = new Date(0);
-    //console.log(runningSlot.endTime);
-    //console.log(`Round: ${runningSlot.round} Group: ${runningSlot.group} : ${end}`);
-    //if (runningSlot.canFly) { console.log('Status: Fly');}
-    //else {console.log('Status: Don\'t Fly');}
-
-    //console.log(Date(0));
 });
-
 
 module.exports = runningSlot;
