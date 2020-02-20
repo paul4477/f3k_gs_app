@@ -1,3 +1,8 @@
+# test data and other stuff
+*.csv
+database-not-used
+*.code-workspace
+
 # Logs
 logs
 *.log
