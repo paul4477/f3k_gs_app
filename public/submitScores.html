@@ -106,7 +106,7 @@
 
         setInterval(() => {
             slotTimer.updateSlotInfo()
-        }, 15000);
+        }, refreshTime);
 
         // Add listener for group, round and type changes
         $(slotTimer).on("slotUpdated", (e) => {

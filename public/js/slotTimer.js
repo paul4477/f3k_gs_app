@@ -3,6 +3,8 @@ const ts = timesync.create({
   interval: 23000
 });
 
+refreshTime = 2000; //ms
+
 function pad0(value, count) {
   var result = value.toString();
   for (; result.length < count; --count)
@@ -60,7 +62,7 @@ function SlotTimer(output, uri) {
         current = 0;
         if (!updating) { // Update explicitly
           updating = true;
-          setTimeout(() => { slotTimer.updateSlotInfo() }, 700);
+          setTimeout(() => { slotTimer.updateSlotInfo() }, 200);
         }
       }
       if (this.slotLabel == "Error" || this.slotLabel == "- - -") countdown.innerText = "--:--"

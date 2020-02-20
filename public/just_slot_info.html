@@ -58,7 +58,8 @@
         slotRow = document.querySelector('#countdown');
         slotTimer = new SlotTimer(slotRow, '/api/slotInfo');
         slotTimer.updateSlotInfo();
-        setInterval(() => { slotTimer.updateSlotInfo() }, 15000);
+        
+        setInterval(() => { slotTimer.updateSlotInfo() }, refreshTime);
 
         // Add listener for group, round and type changes
         $(slotTimer).on("slotUpdated", (e) => {

@@ -144,7 +144,7 @@
         slotTimer.updateSlotInfo();
         setInterval(() => {
             slotTimer.updateSlotInfo()
-        }, 27000);
+        }, refreshTime);
         // Add listener for group, round and type changes
         $(slotTimer).on("slotUpdated", (e) => {
             document.querySelector('#slotStatus').innerText = slotTimer.slotLabel;
@@ -165,6 +165,7 @@
             // Check scores exist
             // if they do 
             function submitAndGo() {
+                window.onbeforeunload = null;
                 $.ajax({
                     type: "POST",
                     url: "/api/slotScore",
