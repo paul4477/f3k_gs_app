@@ -77,9 +77,9 @@ var runningSlot = {
     },
     manageEndTimes: function (mmssString) {
         // We've emptied the endTimes array when paused.
-        console.log(this.raw)
+        
         if (this.raw != 'PA' && this.raw != 'DT') {
-            console.log(this.raw, "HERE")
+            
             minutes = parseInt(mmssString.slice(0, 2)) * 60;
             seconds = parseInt(mmssString.slice(2, 4));
             //console.log(mmssString, minutes, seconds);
