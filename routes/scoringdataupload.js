@@ -1,9 +1,81 @@
 var express = require('express');
+
 var router = express.Router();
 
+const csv = require('csv-parser');
+const fs = require('fs');
 
-function CheckForData(CompID, FromRound, ToRound, res) {
-    res.status(404).send("Not implemented");
+const models = require('../models/');
+
+// Use schema definitions to create headers for csv parser
+scoringData_headers = Object.keys(models.Score.schema.paths);
+scoringData_headers = scoringData_headers.filter(item => item != "_id" && item != "__v");
+
+compData_headers = Object.keys(models.Competition.schema.paths);
+compData_headers = compData_headers.filter(item => item != "_id" && item != "__v");
+
+f3kData_headers = Object.keys(models.F3kRound.schema.paths);
+f3kData_headers = f3kData_headers.filter(item => item != "_id" && item != "__v");
+
+function csvReader(fileName, headers) {
+    return new Promise((resolve, reject) => {
+        let results = []
+        fs.createReadStream(fileName)
+            .pipe(csv({ separator: '|', headers: headers }))
+            .on('data', (row) => {
+                results.push(row);
+            })
+            .on('end', () => {
+                resolve(results);
+            })
+            .on('error', () => {
+                reject(new Error('File reading error'))
+            });
+    });
+}
+
+async function parseCSV(fileName, headers) {
+    try {
+        const results = await csvReader(fileName, headers);
+        //console.log(results.length, "rows read from", fileName)
+        return results;
+    }
+    catch (err) {
+        console.log('Error:', err.message);
+    }
+}
+
+async function CheckForData(CompID, FromRound, ToRound, res) {
+
+    const notDownloadedQuery = await models.Score
+        .find({
+            CompID: CompID,
+            RoundNo: { $gte: FromRound },
+            RoundNo: { $lte: ToRound },
+            Updated: true,
+            Downloaded: 0
+        });
+    console.log(notDownloadedQuery.length)
+    if (notDownloadedQuery.length > 0) {
+        res.status(200).send("NeedsDownloading");
+    }
+
+    const scoreDataQuery = await models.Score
+        .find({
+            CompID: CompID,
+            RoundNo: { $gte: FromRound },
+            RoundNo: { $lte: ToRound },
+        });
+    console.log(scoreDataQuery.length)
+    if (scoreDataQuery.length > 0) {
+        // data that has been updated but not yet downloaded
+        res.status(200).send("ExistingDataFound");
+    }
+    else {
+        res.status(200).send("NoDataFound");
+    }
+
+    // res.status(404).send("Not implemented");
     //res.status(200).send("NoDataFound");
 
     /*
@@ -24,8 +96,8 @@ function CheckForData(CompID, FromRound, ToRound, res) {
     */
 }
 
-function RemoveData(CompID, FromRound, ToRound, res) {
-    res.status(404).send("Not implemented");
+async function RemoveData(CompID, FromRound, ToRound, res) {
+    //res.status(404).send("Not implemented");
     /*
     try: DELETE FROM ScoringData WHERE CompID='" & CompID & "' And RoundNo>=" & FromRound & " And RoundNo<=" & ToRound
     except: Response.Write("RemovingExistingDataFailed")
@@ -43,11 +115,55 @@ function RemoveData(CompID, FromRound, ToRound, res) {
 
     */
 
+    try {
+        await models.Score
+            .deleteMany({
+                CompID: CompID,
+                RoundNo: { $gte: FromRound },
+                RoundNo: { $lte: ToRound },
+            });
+        //console.log(CompID, FromRound, ToRound, r);
+        await models.Competition
+            .deleteMany({
+                CompID: CompID,
+            });
+        // "F3KData" is stored as rounds list on Comp object so is removed as part of the comp above
+    }
+    catch(error){
+        res.status(200).send("RemovingExistingDataFailed");
+    }
+    
+    res.status(200).send("RemovingExistingDataSucceeded");
+
 }
 
-function UploadScoringData(CompID, FromRound, ToRound, res) {
+async function UploadScoringData(CompID, FromRound, ToRound, res) {
     //res.status(200).send("Scoring_DBUpdatedOK");
-    res.status(404).send("Not implemented");
+    /*
+    Try to load csv scoring data
+    except: data error
+    try to update database with new data
+    except connection or update error
+    else updateok
+    */
+
+    let index = 0;
+
+
+    const scoringRows = await parseCSV(`scoreupload/${CompID}_ScoringData.csv`, scoringData_headers);
+
+    //Get comp object
+
+    index = 0;
+    while (index < scoringRows.length) {
+        score = new models.Score(scoringRows[index]);
+        score.save();
+        //console.log(test.CompID);
+        index++;
+    }
+
+
+    res.status(200).send("Scoring_DBUpdatedOK");
     /*
     On client side:
     Select Case ResponseFromServer
@@ -61,9 +177,15 @@ function UploadScoringData(CompID, FromRound, ToRound, res) {
 
 }
 
-function UploadCompData(CompID, res) {
-    //res.status(200).send("CompData_DBUpdatedOK");
-    res.status(404).send("Not implemented");
+async function UploadCompData(CompID, res) {
+
+
+    const compRows = await parseCSV(`scoreupload/${CompID}_CompData.csv`, compData_headers);
+    let comp = new models.Competition(compRows[0]);
+    comp.save()
+    res.status(200).send("CompData_DBUpdatedOK");
+
+    //res.status(404).send("Not implemented");
     /*
     try: DELETE FROM CompData WHERE CompID='" & CompID & "'"
     except: Response.Write("CompData_UnableToRemoveOldData")
@@ -162,9 +284,35 @@ function UploadTargetTimeByRound(CompID, res) {
     res.status(404).send("Not implemented");
 }
 
-function UploadF3KData(CompID, res) {
-    //res.status(200).send("");
-    res.status(404).send("Not implemented");
+async function UploadF3KData(CompID, res) {
+    
+
+    //console.log("obj", test);    
+    //console.log("row", scoringRows[--index]);    
+
+    const f3kRows = await parseCSV(`scoreupload/${CompID}_F3KData.csv`, f3kData_headers);
+
+    const comp = await models.Competition
+    .findOne({
+        CompID: CompID,
+    });
+
+    index = 0;
+    while (index < f3kRows.length) {
+        test = new models.F3kRound(f3kRows[index]);
+        comp.rounds.push(test);
+        //console.log(test.CompID);
+        index++;
+    }
+    //console.log(f3kRows[7]);
+    //test = new models.F3k(f3kRows[0]);
+    //test.save();
+    comp.save();
+    console.log(comp);
+    //console.log(db.disconnect);
+    //mongoose.disconnect();
+res.status(200).send("");
+
 
     /*
     On client side:
@@ -180,27 +328,6 @@ function UploadF3KData(CompID, res) {
 
     Open CSV file: ~/ScoreUpload/<COMPID>_F3KData.csv
     Delimiter = "|"
-
-    While Not myReader.EndOfData
-        Try
-            CurrentRow = myReader.ReadFields
-            drNew = dtF3KData.NewRow
-
-            drNew("CompID") = CurrentRow(0).ToString
-            drNew("RoundNo") = CInt(CurrentRow(1)).ToString.Replace(",", ".")
-            drNew("F3KTask") = CurrentRow(2).ToString
-            drNew("F3KTaskAbbreviation") = CurrentRow(3).ToString
-            drNew("F3KTaskDescription") = CurrentRow(4).ToString
-            drNew("F3KTaskMaxScores") = CInt(CurrentRow(5)).ToString.Replace(",", ".")
-            drNew("F3KTaskMaxFlights") = CInt(CurrentRow(6)).ToString.Replace(",", ".")
-            drNew("DateCreated") = CInt(CurrentRow(7))
-            dtF3KData.Rows.Add(drNew)
-        Catch ex As Exception
-            msg = "F3KData_UnableToReadUploadedData"
-            Response.Write(msg)
-            If cn.State = ConnectionState.Open Then cn.Close()
-            Exit Sub
-        End Try    
 
     try: Update database
     except: Response.Write("F3KData_UnableToUpdateDatabase")

@@ -22,7 +22,7 @@ var runningSlot = {
     group: 0,
     round: 0,
     endTimes: [],
-    maxTimes: 10,
+    maxTimes: 2,
     canFly: false,
     type: null,
     get endTime() {
@@ -34,12 +34,13 @@ var runningSlot = {
 
         switch (typeString) {
             case "ST":
-                this.type = "Sleep";
+                this.type = "- - -"; //"Sleep"
                 this.canFly = true;
                 break;
             case "ER":
                 this.type = "Error";
                 this.canFly = true;
+                this.endTimes = [];
                 break;
 
             case "PT":
@@ -63,6 +64,11 @@ var runningSlot = {
                 this.type = "No Fly";
                 this.canFly = false;
                 break;
+            case "PA":
+                this.type = "Paused";
+                this.canFly = false;
+                this.endTimes = [];
+                break;
             default:
                 this.type = this.raw;
                 this.canFly = false;
@@ -70,20 +76,28 @@ var runningSlot = {
         }
     },
     manageEndTimes: function (mmssString) {
-        minutes = parseInt(mmssString.slice(0, 2)) * 60;
-        seconds = parseInt(mmssString.slice(2, 4));
-        // Convert to miliseconds
-        endTime = Date.now() + ((minutes + seconds) * 1000);
-        this.endTimes.push(endTime);
+        // We've emptied the endTimes array when paused.
+        console.log(this.raw)
+        if (this.raw != 'PA' && this.raw != 'DT') {
+            console.log(this.raw, "HERE")
+            minutes = parseInt(mmssString.slice(0, 2)) * 60;
+            seconds = parseInt(mmssString.slice(2, 4));
+            //console.log(mmssString, minutes, seconds);
+            // Convert to miliseconds
+            endTime = Date.now() + 1000 + ((minutes + seconds) * 1000);
+            //endTime += 1000; // Correct off by one error
+            this.endTimes.push(endTime);
 
-        //if (minutes + seconds = 0) { while (this.endTime.length > 1) { this.endTime.shift()}};
-        if (minutes + seconds == 0) { this.endTimes = [] };
-        // Pop (fifo) time from endTimes
-        if (this.endTimes.length > this.maxTimes) { this.endTimes.shift() };
-
+            //if (minutes + seconds = 0) { while (this.endTime.length > 1) { this.endTime.shift()}};
+            if (minutes + seconds == 0) { this.endTimes = [] };
+            // Pop (fifo) time from endTimes
+            if (this.endTimes.length > this.maxTimes) { this.endTimes.shift() };
+            //console.log(this.endTime);
+        }
     },
     update: function (buffer) {
         // Parse buffer direct from serial port
+        //console.log(buffer);
         s = buffer.toString();
         // TODO: Check format
         // Compare to regex and throw error if no match
@@ -100,7 +114,7 @@ const config = require('config');
 const port = new SerialPort(config.get('serial'), function (err) {
     if (err) {
         runningSlot.update("R00G00T0000+DT+\n")
-        return console.log('Error: ', err.message)
+        return console.error('Error: ', err.message)
     }
 });
 

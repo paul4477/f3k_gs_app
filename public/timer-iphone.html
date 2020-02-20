@@ -92,7 +92,7 @@
 
         stopwatch = new Stopwatch(button, clock);
         // Add listener for results
-        $(stopwatch).on("resultsUpdated", (e) => {
+        $(stopwatch).on("resultAdded", (e) => {
 
             var {
                 results: times
@@ -124,6 +124,19 @@
             else { lastResultList.appendChild(newTime); }
             // Allow page to scroll if we have more results
             if (times.length > 6) { document.body.removeEventListener('touchmove', blockMove, { passive: false }); }
+        });
+
+        $(stopwatch).on("resultsCleared", (e) => {
+            slotResults = {
+                group: slotTimer.group,
+                round: slotTimer.round,
+                pilot: null,
+                times: [],
+            };
+            while (lastResultList.hasChildNodes())
+                lastResultList.removeChild(lastResultList.lastChild);
+            while (resultList.hasChildNodes())
+                resultList.removeChild(resultList.lastChild);
         });
 
         slotRow = document.querySelector('#countdown');
@@ -159,7 +172,7 @@
                     data: JSON.stringify(slotResults),
 
                     success: function (data) {
-                        params = $.param({ "result": data.id });
+                        params = $.param({ "result": data._id });
                         window.location.href = `/ui/scoring?${params}`
                     }
                 });
@@ -210,8 +223,28 @@
 
     };
 
-    // Startup...
 
+    function resetAll() {
+        if (!stopwatch.running && stopwatch.results.length > 0) {
+            if (window.confirm("Are you sure?")) {
+                stopwatch.clearResults();
+                stopwatch.updateDisplay();
+            }
+        }
+    }
+    
+    // Prompt user before leaving with unsubmitted results.
+    window.onbeforeunload = function(e) {
+        if (stopwatch.running || stopwatch.results.length > 0) {
+            return "Do you want to leave without submitting results?"; // Browser overrides message
+        }
+        else{
+            delete e['returnValue']
+            return;
+        }
+    }
+
+    // Startup...
     stopwatch = null;
     slotTimer = null;
     slotResults = {
@@ -246,7 +279,7 @@
     <ul class="menu">
         <li><a href="/">Home</a></li>
         <li><a href="" id="scoreButton">Submit</a></li>
-        <li><a href="">Clear</a></li>
+        <li><a href="javascript:resetAll()">Clear</a></li>
         <li style="float:right; border-left: 1px solid #bbb;">
             <a href="/ui/settings">Settings</a>
         </li>

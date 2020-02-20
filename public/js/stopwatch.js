@@ -15,42 +15,50 @@ function Stopwatch(input, output) {
 
     this.results = [];
 
-    this.roundTenths = function(number) {
+    this.roundTenths = function (number) {
         return Math.floor(number * 10) / 10;
     }
 
-    this.start = function() {
+    this.start = function () {
         //console.log("start", this.running, startedTime, elapsed);
         if (!startedTime) startedTime = Date.now();
         if (!this.running) { this.running = true; }
         //tenthsOuter.innerText = "";
     }
 
-    this.stop = function() {
+    this.stop = function () {
         //console.log("stop", this.running, startedTime, elapsed);
         this.running = false;
         startedTime = 0;
         //tenthsOuter.innerText = "8";
     }
 
-    this.recordResult = function() {
+    this.recordResult = function () {
 
         this.results.push(this.roundTenths(elapsed));
         //console.log(this.results);
     }
 
-    this.startstop = function() {
+    this.startstop = function () {
         //console.log("startstop", this.running, startedTime, elapsed);
 
         if (this.running) {
             this.recordResult();
             this.stop();
             // emit event
-            $(this).trigger("resultsUpdated");
+            $(this).trigger("resultAdded");
         } else { this.start() }
     }
 
-    this.updateDisplay = function() {
+    this.clearResults = function () {
+        if (!this.running && this.results.length > 0) {
+            this.results = [];
+            $(this).trigger("resultsCleared");
+
+        }
+    }
+
+    this.updateDisplay = function () {
         //console.log("updateDisplay");
         let fraction = (elapsed - Math.floor(elapsed));
 
@@ -93,7 +101,7 @@ function Stopwatch(input, output) {
 
     }
 
-    this.step = function() {
+    this.step = function () {
         //console.log("step");
         if (!this.running) return;
         elapsed = (Date.now() - startedTime) / 1000;
@@ -121,7 +129,7 @@ function Stopwatch(input, output) {
                 event.preventDefault();
                 event.stopPropagation();
 
-                setTimeout(function() {
+                setTimeout(function () {
                     clockHolder.style.background = oldClockBack;
                     button.style.background = oldButtonBack;
                 }, 110);
@@ -135,7 +143,7 @@ function Stopwatch(input, output) {
             // event from firing as well
             event.preventDefault();
             event.stopPropagation();
-            setTimeout(function() {
+            setTimeout(function () {
                 clockHolder.style.background = "#ffffb3";
             }, 110);
 

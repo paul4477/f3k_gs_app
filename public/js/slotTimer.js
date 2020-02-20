@@ -28,7 +28,7 @@ function SlotTimer(output, uri) {
 
   // Page elements
   let countdown = output;
-  let updating = false;
+  let updating = true;
   //let dataSource = uri;
 
   let updater = null;
@@ -36,49 +36,36 @@ function SlotTimer(output, uri) {
   this.finishTime = Date.now();
 
   this.updateSlotInfo = function () {
-    //console.log("update", this.updating, this.finishTime);
-    //console.log(this);
 
     $.getJSON(this.dataSource, (data) => {
-      //console.log("Getting data");
-      //console.log(this);
       this.finishTime = new Date(data.endTime);
-      //console.log("New", this.finishTime);
       this.slotLabel = data.type;
       this.group = data.group;
       this.round = data.round;
       this.canFly = data.canFly;
-      this.updating = false;
-      //console.log("update finished", this.updating);
       $(this).trigger("slotUpdated");
-    });
-
+    })
+      .done(() => { updating = false })
   };
 
-  this.step = function (timestamp) {
-    //console.log("step", this.updating, this.finishTime);
-    // Slot Timer
+  this.step = async function (timestamp) {
     if (!this.finishTime) { //Not initialised
       return
     }
     else {
       const now = new Date(ts.now());
       var current = this.finishTime - now;
-      var interval = null;
       current = current / 1000; // convert to seconds
-      if (current <= 0) {
+      if (current <= 0) { // Countdown has ended
         current = 0;
-        if (!this.updating) {
-          this.updating = true;
-          setTimeout(() => { slotTimer.updateSlotInfo() }, 1000);
-          //console.log("settimeout called", this.updating, this.finishTime)
+        if (!updating) { // Update explicitly
+          updating = true;
+          setTimeout(() => { slotTimer.updateSlotInfo() }, 700);
         }
-        //console.log("continuing", this.updating, this.finishTime);
       }
+      if (this.slotLabel == "Error" || this.slotLabel == "- - -") countdown.innerText = "--:--"
+      else countdown.innerText = formatTime(current, false);
     }
-    
-    if (this.slotLabel == "Error" || this.slotLabel == "- - -" ) countdown.innerText = "--:--"
-    else countdown.innerText = formatTime(current, false);
   }
 }
 

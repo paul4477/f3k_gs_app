@@ -24,15 +24,9 @@
 </head>
 
 <script>
-    // get notified on changes in the offset
-    //ts.on('change', function (offset) {
-    //  document.querySelector('.delta').innerText = offset + ' ms';
-    //});
     function blockMove(event) {
         // Tell Safari not to move the window.
         event.preventDefault();
-        //alert("blocked");
-
     }
 
     function step() {
@@ -50,7 +44,6 @@
                 invertedDiv.style.color = "#030"
             }
         }
-
         window.requestAnimationFrame(step);
     };
 
@@ -65,23 +58,17 @@
         slotRow = document.querySelector('#countdown');
         slotTimer = new SlotTimer(slotRow, '/api/slotInfo');
         slotTimer.updateSlotInfo();
-        setInterval(() => {
-            slotTimer.updateSlotInfo()
-        }, 27000);
+        setInterval(() => { slotTimer.updateSlotInfo() }, 15000);
 
         // Add listener for group, round and type changes
         $(slotTimer).on("slotUpdated", (e) => {
             document.querySelector('#slotStatus').innerText = slotTimer.slotLabel;
             document.querySelector('#groupNum').innerText = slotTimer.group;
             document.querySelector('#roundNum').innerText = slotTimer.round;
-
         });
-        
-
     };
 
     // Startup...
-
     slotTimer = null;
 
     $(function () {
@@ -92,13 +79,10 @@
 
 </script>
 
-
-
-
 <body onload="pageSetup();">
     <ul class="menu">
         <li><a href="/" id="scoreButton">Home</a></li>
-        
+
         <li style="float:right; border-left: 1px solid #bbb;">
             <a href="/ui/settings/">Settings</a>
         </li>

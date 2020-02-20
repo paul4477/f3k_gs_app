@@ -226,10 +226,10 @@ var taskScorer = {
         // length should be = length task.targets and also contain cap details for display
 
         // Do we want to check on number of times vs number of flights allowed?
-        // Do we watn to check times add up to less than 10minutes?
+        // Do we want to check times add up to less than 10minutes? (or whatever)
 
         let task = tasks[taskName];
-        console.log(taskName, task);
+        //console.log(taskName, task);
         let results = [];
 
         if (task.lastFlights) {
@@ -259,9 +259,9 @@ var taskScorer = {
                 }
             }
             else { // Ordered targets
-                console.log("Ordered");
+                //console.log("Ordered");
                 results = rawTimes.map((item) => { if (item.valid === true) return item.time; else return 0 });
-                console.log(results);
+                //console.log(results);
                 let excessResults = results.length - task.targets.length;
                 if (excessResults > 0) {
                     results = results.slice(0, results.length-excessResults)
@@ -296,46 +296,6 @@ var taskScorer = {
             else results[i] = [results[i], task.targets[i]];
         }
         return results;
-    },
-
-    type: null,
-    get endTime() {
-        // Running average of contents of endTimes
-        return this.endTimes.reduce((all, one, _, src) => all += one / src.length, 0);
-    },
-    set rawType(typeString) {
-        this.raw = typeString;
-
-        switch (typeString) {
-            case "ST":
-                this.type = "Sleep";
-                this.canFly = true;
-                break;
-
-        }
-    },
-    manageEndTimes: function (mmssString) {
-        minutes = parseInt(mmssString.slice(0, 2)) * 60;
-        seconds = parseInt(mmssString.slice(2, 4));
-        // Convert to miliseconds
-        endTime = Date.now() + ((minutes + seconds) * 1000);
-        this.endTimes.push(endTime);
-
-        //if (minutes + seconds = 0) { while (this.endTime.length > 1) { this.endTime.shift()}};
-        if (minutes + seconds == 0) { this.endTimes = [] };
-        // Pop (fifo) time from endTimes
-        if (this.endTimes.length > this.maxTimes) { this.endTimes.shift() };
-
-    },
-    update: function (buffer) {
-        // Parse buffer direct from serial port
-        s = buffer.toString();
-        // TODO: Check format
-        // Compare to regex and throw error if no match
-        this.round = s.slice(1, 3);
-        this.group = s.slice(4, 6);
-        this.rawType = s.slice(12, 14);
-        this.manageEndTimes(s.slice(7, 11));
     }
 };
 

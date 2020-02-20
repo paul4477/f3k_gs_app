@@ -106,7 +106,7 @@
 
         setInterval(() => {
             slotTimer.updateSlotInfo()
-        }, 27000);
+        }, 15000);
 
         // Add listener for group, round and type changes
         $(slotTimer).on("slotUpdated", (e) => {
@@ -126,26 +126,33 @@
         $.getJSON(`/api/slotScore/${resultID}`, (data) => {
 
             //const results = data.result.times.filter(time => time.valid === true);
-            results = data.result.times;
+            results = data;//.result;
+            
+            //round = data.result.round;
+            //group = data.result.group;
             //results =
 
 
             output = document.querySelector('#results');
 
-            for (i = 0; i < results.length; i += 1) {
+            for (i = 0; i < results.times.length; i += 1) {
 
                 let newTime = document.createElement('li');
                 //newTime.className = "ui-state-default";
 
-                newTime.innerText = formatTime(results[i].time);
+                newTime.innerText = formatTime(results.times[i].time);
                 newTime.className = "fullWidth"
-                if (results[i].valid == false) { newTime.style.textDecoration = "line-through"; }
+                if (results.times[i].valid == false) { newTime.style.textDecoration = "line-through"; }
 
                 output.appendChild(newTime);
             }
 
             function drawScores(data) {
                 scoreHolder = document.querySelector('#roundScores');
+                if (data.length == 0){
+                    let noResults = document.createElement('div')
+                    scoreHolder.appendChild(noResults);
+                }
                 while (data.length > 0) {
                     scoreInfo = data.shift();
                     let newResult = document.createElement('div');
@@ -177,7 +184,7 @@
                 }
                 //document.querySelector('#roundScores').innerText = JSON.stringify(data);
             };
-
+            
             $.ajax({
                 type: "POST",
                 url: "/api/tasks/score",
