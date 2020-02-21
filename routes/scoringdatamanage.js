@@ -1,6 +1,10 @@
 var express = require('express');
 var router = express.Router();
 
+const csv = require('csv-parser');
+const fs = require('fs');
+
+const models = require('../models/');
 
 function BackupScoresCheckForData(CompID, res) {
     res.status(404).send("Not implemented");
@@ -35,8 +39,28 @@ function ScoreEntryClose(CompID, res) {
 function ValidateCompID(CompID, res) {
     res.status(404).send("Not implemented");
 }
-function DeleteComp(CompID, res) {
-    res.status(404).send("Not implemented");
+
+async function  DeleteComp(CompID, res) {
+    try {
+        await models.Score
+            .deleteMany({
+                CompID: CompID,
+            });
+        //console.log(CompID, FromRound, ToRound, r);
+        await models.Competition
+            .deleteMany({
+                CompID: CompID,
+            });
+        // "F3KData" is stored as rounds list on Comp object so is removed as part of the comp above
+    }
+    catch(error){
+        res.status(200).send("CompDeletionFailed");
+    }
+    
+    res.status(200).send("CompDeleted");
+
+
+
 }
 // Duplicate ScoringDataUpload.aspx implementation
 router.get('/scoringdatamanage.aspx', (req, res) => {

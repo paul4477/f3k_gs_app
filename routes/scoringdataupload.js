@@ -41,7 +41,7 @@ async function parseCSV(fileName, headers) {
         return results;
     }
     catch (err) {
-        console.log('Error:', err.message);
+        console.error('Error:', err.message);
     }
 }
 
@@ -55,7 +55,7 @@ async function CheckForData(CompID, FromRound, ToRound, res) {
             Updated: true,
             Downloaded: 0
         });
-    console.log(notDownloadedQuery.length)
+    //console.log(notDownloadedQuery.length)
     if (notDownloadedQuery.length > 0) {
         res.status(200).send("NeedsDownloading");
     }
@@ -66,7 +66,7 @@ async function CheckForData(CompID, FromRound, ToRound, res) {
             RoundNo: { $gte: FromRound },
             RoundNo: { $lte: ToRound },
         });
-    console.log(scoreDataQuery.length)
+    //console.log(scoreDataQuery.length)
     if (scoreDataQuery.length > 0) {
         // data that has been updated but not yet downloaded
         res.status(200).send("ExistingDataFound");
@@ -287,7 +287,7 @@ function UploadTargetTimeByRound(CompID, res) {
 async function UploadF3KData(CompID, res) {
     
 
-    //console.log("obj", test);    
+    //console.log(CompID);    
     //console.log("row", scoringRows[--index]);    
 
     const f3kRows = await parseCSV(`scoreupload/${CompID}_F3KData.csv`, f3kData_headers);
@@ -296,7 +296,7 @@ async function UploadF3KData(CompID, res) {
     .findOne({
         CompID: CompID,
     });
-
+    //console.log(CompID, comp);    
     index = 0;
     while (index < f3kRows.length) {
         test = new models.F3kRound(f3kRows[index]);
@@ -308,7 +308,7 @@ async function UploadF3KData(CompID, res) {
     //test = new models.F3k(f3kRows[0]);
     //test.save();
     comp.save();
-    console.log(comp);
+    //console.log(comp);
     //console.log(db.disconnect);
     //mongoose.disconnect();
 res.status(200).send("");
