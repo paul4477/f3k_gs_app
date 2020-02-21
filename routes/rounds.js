@@ -1,6 +1,8 @@
 const roundsRouter = require('express').Router({ mergeParams: true });
 const models = require('../models/');
 
+const { check, validationResult } = require('express-validator');
+
 // Get rounds list (compID is from outer router)
 roundsRouter.get('/', async (req, res) => {
 
@@ -29,9 +31,14 @@ roundsRouter.get('/', async (req, res) => {
 
 
 // Get single competition
-roundsRouter.get('/:roundID', async (req, res) => {
+roundsRouter.get('/:roundID', [check('roundID').isInt({ gt: 0 })], async (req, res) => {
 
     models.Competition.find({ CompID: req.params.compID }, (err, docs) => {
+
+        const validationErrors = validationResult(req)
+        if (!validationErrors.isEmpty()) {
+            return res.status(422).json({ errors: validationErrors.array() })
+        }
 
         if (err) {
             res.status(404).send(`DB find error: ${err.message}`);
@@ -45,17 +52,14 @@ roundsRouter.get('/:roundID', async (req, res) => {
             }
             else {
 
-                let roundIndex = parseInt(req.params.roundID);
-                if (Number.isNaN(roundIndex)) { res.status(404).send(`Bad round number`) }
-                else {
-
-                    if (roundIndex < 1 || roundIndex > docs[0].rounds.length) {
-                        res.status(404).send(`Round number out of range`)
-                    }
-                    else {
-                        res.send(docs[0].rounds[parseInt(req.params.roundID) - 1])
-                    }
+                let roundIndex = req.params.roundID;
+                if (roundIndex < 1 || roundIndex > docs[0].rounds.length) {
+                    return res.status(422).json({ errors: [{ "value": "d", "msg": "Invalid value", "param": "roundID", "location": "params" }] });
                 }
+                else {
+                    res.send(docs[0].rounds[roundIndex - 1])
+                }
+
             }
 
         }
