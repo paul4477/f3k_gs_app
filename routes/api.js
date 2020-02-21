@@ -1,26 +1,26 @@
 var express = require('express');
-var router = express.Router();
+var api = express.Router();
 
 const models = require('../models/');
 
 // timesync for server synchronisation
 var timesyncServer = require('timesync/server');
-router.use('/timesync', timesyncServer.requestHandler);
+api.use('/timesync', timesyncServer.requestHandler);
 
 // slotInfo provided by serial port data
 const serialSlot = require('./serial');
-router.get('/slotInfo', (req, res) => {
+api.get('/slotInfo', (req, res) => {
     res.send(serialSlot);
 });
 
-router.get('/clock/:timerString', (req, res) => {
+api.get('/clock/:timerString', (req, res) => {
     serialSlot.update(req.params.timerString);
+    res.status(200).send(serialSlot);
 });
 
 
 const taskScorer = require('./tasks');
-router.post('/tasks/score', async (req, res) => {
-    
+api.post('/tasks/score', async (req, res) => {
     
     // Get round definiton in order to pass task to scorer
     //console.log("Here")
@@ -37,7 +37,7 @@ router.post('/tasks/score', async (req, res) => {
 });
 
 // Temp storage and retrieval of score data between pages
-router.post('/slotScore', (req, res) => {
+api.post('/slotScore', (req, res) => {
     //console.log(req.body);
     let tempScore = new models.TempScore(req.body);
     
@@ -45,13 +45,23 @@ router.post('/slotScore', (req, res) => {
     res.send(tempScore);
 });
 
-router.get('/slotScore/:id', async (req, res) => {
-    const result = await models.TempScore.findById(req.params.id);
-    //const result = recordedScores.find(r => r.id === parseInt(req.params.id));
-    
-    if (!result) res.status(404).send("result not found");
-
-    res.send(result);
+api.get('/slotScore/:id', async (req, res) => {
+    try {
+        const result = await models.TempScore.findById(req.params.id);
+        res.send(result);
+    }
+    catch{
+        res.status(404).send("result not found");
+    }
 });
 
-module.exports = router;
+// Comps (and underneath that, rounds)
+const comps = require('./comps');
+const rounds = require('./rounds');
+api.use('/comp', comps);
+api.use('/round', comps);
+
+
+
+
+module.exports = api;
