@@ -37,5 +37,11 @@
   "browserslist": [
     "> 1%",
     "last 2 versions"
-  ]
+  ],
+  "vue": {
+    "devServer": {
+      "port": 80,
+      "proxy": "http://localhost:8080"
+    }
+  }
 }
