@@ -35,6 +35,37 @@
 
     }
 
+    // onReady
+    $(function () {
+
+        // Populate comp list
+        $.ajax({
+            type: "Get",
+            url: "/api/comp",
+            contentType: "application/json",
+            data: {limit: 5, sort: "CompDate"},
+
+            success: function (data) {
+                //
+                compList = document.querySelector('#compList');
+
+                for (i = 0; i < data.length; i += 1) {
+                    // {"_id":"5e4e58443e8f260a046f8f99","CompID":"13D4Aa86ac9db","CompName":"Test44","CompVenue":"Here"}
+                    let newComp = document.createElement('li');
+                    newComp.innerText = `${data[i].CompName}, ${data[i].CompVenue}`;
+                    compList.appendChild(newComp);
+
+                //params = $.param({ "result": data._id });
+                //window.location.href = `/ui/scoring?${params}`
+                }
+            }
+        });
+
+
+
+
+    });
+
 
 
 </script>
@@ -46,6 +77,11 @@
     <ul class="menu">
         <li><a href="/" id="scoreButton">Home</a></li>
     </ul>
+
+    <div id="content" class="row">
+        <ul id="compList">
+        </ul>
+    </div>
 
 
 </body>

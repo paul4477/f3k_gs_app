@@ -9,10 +9,10 @@ const models = require('../models/');
 
 // Use schema definitions to create headers for csv parser
 scoringData_headers = Object.keys(models.Score.schema.paths);
-scoringData_headers = scoringData_headers.filter(item => item != "_id" && item != "__v");
+scoringData_headers = scoringData_headers.filter(item => item != "_id" && item != "__v" && item != 'Downloaded');
 
 compData_headers = Object.keys(models.Competition.schema.paths);
-compData_headers = compData_headers.filter(item => item != "_id" && item != "__v");
+compData_headers = compData_headers.filter(item => item != "_id" && item != "__v" && item !="rounds");
 
 f3kData_headers = Object.keys(models.F3kRound.schema.paths);
 f3kData_headers = f3kData_headers.filter(item => item != "_id" && item != "__v");

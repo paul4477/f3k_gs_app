@@ -57,9 +57,8 @@ api.get('/slotScore/:id', async (req, res) => {
 
 // Comps (and underneath that, rounds)
 const comps = require('./comps');
-const rounds = require('./rounds');
 api.use('/comp', comps);
-api.use('/round', comps);
+
 
 
 
