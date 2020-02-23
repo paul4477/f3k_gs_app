@@ -23,7 +23,7 @@ var scoreSchema = new Schema({
     PilotName: String,
     StartNo: Number,
     DateCreated: Number,
-    Updated: {type: Boolean, default: false},
+    Updated: { type: Boolean, default: false },
     OriginalRoundNo: Number,
     LandingOver75m: Boolean,
     ProgressiveTotalScore: Number,
@@ -39,7 +39,7 @@ var scoreSchema = new Schema({
     ModelIDList: String,
     ModelID: Number,
 
-    Downloaded: {type: Number, default: 0}
+    Downloaded: { type: Boolean, default: false }
 });
 
 

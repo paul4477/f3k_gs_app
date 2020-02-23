@@ -9,10 +9,10 @@ const models = require('../models/');
 
 // Use schema definitions to create headers for csv parser
 scoringData_headers = Object.keys(models.Score.schema.paths);
-scoringData_headers = scoringData_headers.filter(item => item != "_id" && item != "__v");
+scoringData_headers = scoringData_headers.filter(item => item != "_id" && item != "__v" && item != 'Downloaded');
 
 compData_headers = Object.keys(models.Competition.schema.paths);
-compData_headers = compData_headers.filter(item => item != "_id" && item != "__v");
+compData_headers = compData_headers.filter(item => item != "_id" && item != "__v" && item != "rounds");
 
 f3kData_headers = Object.keys(models.F3kRound.schema.paths);
 f3kData_headers = f3kData_headers.filter(item => item != "_id" && item != "__v");
@@ -50,21 +50,21 @@ async function CheckForData(CompID, FromRound, ToRound, res) {
     const notDownloadedQuery = await models.Score
         .find({
             CompID: CompID,
-            RoundNo: { $gte: FromRound },
-            RoundNo: { $lte: ToRound },
+            CompID: CompID,
             Updated: true,
-            Downloaded: 0
+            $and: [{ RoundNo: { $gte: FromRound } }, { RoundNo: { $lte: ToRound } }],
+            Downloaded: false
         });
     //console.log(notDownloadedQuery.length)
     if (notDownloadedQuery.length > 0) {
         res.status(200).send("NeedsDownloading");
+        return
     }
 
     const scoreDataQuery = await models.Score
         .find({
             CompID: CompID,
-            RoundNo: { $gte: FromRound },
-            RoundNo: { $lte: ToRound },
+            $and: [{ RoundNo: { $gte: FromRound } }, { RoundNo: { $lte: ToRound } }]
         });
     //console.log(scoreDataQuery.length)
     if (scoreDataQuery.length > 0) {
@@ -119,8 +119,7 @@ async function RemoveData(CompID, FromRound, ToRound, res) {
         await models.Score
             .deleteMany({
                 CompID: CompID,
-                RoundNo: { $gte: FromRound },
-                RoundNo: { $lte: ToRound },
+                $and: [{ RoundNo: { $gte: FromRound } }, { RoundNo: { $lte: ToRound } }]
             });
         //console.log(CompID, FromRound, ToRound, r);
         await models.Competition
@@ -129,10 +128,10 @@ async function RemoveData(CompID, FromRound, ToRound, res) {
             });
         // "F3KData" is stored as rounds list on Comp object so is removed as part of the comp above
     }
-    catch(error){
+    catch (error) {
         res.status(200).send("RemovingExistingDataFailed");
     }
-    
+
     res.status(200).send("RemovingExistingDataSucceeded");
 
 }
@@ -285,7 +284,7 @@ function UploadTargetTimeByRound(CompID, res) {
 }
 
 async function UploadF3KData(CompID, res) {
-    
+
 
     //console.log(CompID);    
     //console.log("row", scoringRows[--index]);    
@@ -293,9 +292,9 @@ async function UploadF3KData(CompID, res) {
     const f3kRows = await parseCSV(`scoreupload/${CompID}_F3KData.csv`, f3kData_headers);
 
     const comp = await models.Competition
-    .findOne({
-        CompID: CompID,
-    });
+        .findOne({
+            CompID: CompID,
+        });
     //console.log(CompID, comp);    
     index = 0;
     while (index < f3kRows.length) {
@@ -311,7 +310,7 @@ async function UploadF3KData(CompID, res) {
     //console.log(comp);
     //console.log(db.disconnect);
     //mongoose.disconnect();
-res.status(200).send("");
+    res.status(200).send("");
 
 
     /*
@@ -357,8 +356,8 @@ router.get('/scoringdataupload.aspx', (req, res) => {
         Case "UploadLandingData" : UploadLandingData(CompID)    */
 
     const CompID = req.query.ID;
-    const FromRound = req.query.FR;
-    const ToRound = req.query.TR;
+    const FromRound = parseInt(req.query.FR);
+    const ToRound = parseInt(req.query.TR);
 
     switch (req.query.ACTION) {
         case "CheckForData":

@@ -1,13 +1,15 @@
 
 const express = require('express');
 const config = require('config');
+const cors = require('cors');
+const morgan = require('morgan');
 //const Joi = require('@hapi/joi');
 const path = require('path');
 const mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost/f3k_test1')
-    .then(() => console.log("Connected to MongoDB"))
-    .catch(err => console.error("Could not connect to MongoDB"));
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(err => console.error("Could not connect to MongoDB"));
 
 
 
@@ -16,7 +18,9 @@ const logger = (req, res, next) => {
   next();
 }
 const app = express();
-app.use(logger);
+//app.use(logger);
+app.use(morgan('tiny'));
+app.use(cors());
 app.use(express.json());
 
 // Static files in public
