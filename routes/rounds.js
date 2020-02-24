@@ -3,6 +3,11 @@ const models = require('../models/');
 
 const { check, validationResult } = require('express-validator');
 
+// /api/comp/[:compid/]
+// /api/comp/:compid/round/[:roundid]
+// /api/comp/:compid/score/[:pilotid]
+// /api/comp/:compid/round/:roundid/score/[:pilotid]
+
 // Get rounds list (compID is from outer router)
 roundsRouter.get('/', async (req, res) => {
 
@@ -66,11 +71,7 @@ roundsRouter.get('/:roundID', [check('roundID').isInt({ gt: 0 })], async (req, r
     });
 });
 
-
-/* api.get('/competition/:id', async (req, res) => {
-    const comp = await models.Competition.findById(req.params.id);
-    if (!result) res.status(404).send("result not found");
-    res.send()
-}); */
+const scoresRouter = require('./scores');
+roundsRouter.use('/:roundID/score', scoresRouter);
 
 module.exports = roundsRouter;

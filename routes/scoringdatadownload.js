@@ -8,7 +8,7 @@ const models = require('../models/');
 
 function CheckScoresExist(CompID, FromRound, ToRound, res) {
     //try {
-    console.log(FromRound, ToRound)
+    //console.log(FromRound, ToRound)
     models.Score.find({
         CompID: CompID,
         Updated: true,
