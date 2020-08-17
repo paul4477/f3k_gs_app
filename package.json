@@ -17,7 +17,7 @@
     "csv-stringify": "^5.3.6",
     "express": "^4.17.1",
     "express-validator": "^6.4.0",
-    "ftp-srv": "^4.3.1",
+    "ftp-srv": "^4.3.4",
     "mongoose": "^5.8.11",
     "serialport": "^8.0.7",
     "timesync": "^1.0.5"
