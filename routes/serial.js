@@ -15,22 +15,25 @@ const SerialPort = require('serialport');
 //CR is the ascii character for Carriage Return.
 //A typical output string could be R09G01T0652WT+CR
 
+let endTimes = []
+
 var runningSlot = {
     // All times are server time
     // TimeSync.js is needed on client to manage sync with server time
     raw: "ST", // PT, WT, LT, ST, DT
     group: 0,
     round: 0,
-    endTimes: [],
-    maxTimes: 2,
+//    endTimes: [],
+    maxTimes: 5,
     canFly: false,
     type: null,
     get endTime() {
         // Running average of contents of endTimes
-        return this.endTimes.reduce((all, one, _, src) => all += one / src.length, 0);
+        return endTimes.reduce((all, one, _, src) => all += one / src.length, 0);
     },
     set rawType(typeString) {
-        this.raw = typeString;
+        this.raw = typeString
+        endTimes = []
 
         switch (typeString) {
             case "ST":
@@ -40,9 +43,7 @@ var runningSlot = {
             case "ER":
                 this.type = "Error";
                 this.canFly = true;
-                this.endTimes = [];
                 break;
-
             case "PT":
                 this.type = "Prep";
                 this.canFly = true;
@@ -58,7 +59,6 @@ var runningSlot = {
             case "DT":
                 this.type = "- - -";
                 this.canFly = false;
-                this.endTimes = [];
                 break;
             case "NF":
                 this.type = "No Fly";
@@ -67,7 +67,6 @@ var runningSlot = {
             case "PA":
                 this.type = "Paused";
                 this.canFly = false;
-                this.endTimes = [];
                 break;
             default:
                 this.type = this.raw;
@@ -77,34 +76,40 @@ var runningSlot = {
     },
     manageEndTimes: function (mmssString) {
         // We've emptied the endTimes array when paused.
-        
+
         if (this.raw != 'PA' && this.raw != 'DT') {
-            
+
             minutes = parseInt(mmssString.slice(0, 2)) * 60;
             seconds = parseInt(mmssString.slice(2, 4));
-            //console.log(mmssString, minutes, seconds);
+            console.log(mmssString, minutes, seconds);
             // Convert to miliseconds
             endTime = Date.now() + 1000 + ((minutes + seconds) * 1000);
             //endTime += 1000; // Correct off by one error
-            this.endTimes.push(endTime);
+            endTimes.push(endTime);
 
             //if (minutes + seconds = 0) { while (this.endTime.length > 1) { this.endTime.shift()}};
-            if (minutes + seconds == 0) { this.endTimes = [] };
+            if (minutes + seconds == 0) { endTimes = [] };
             // Pop (fifo) time from endTimes
-            if (this.endTimes.length > this.maxTimes) { this.endTimes.shift() };
-            //console.log(this.endTime);
+            if (endTimes.length > this.maxTimes) { endTimes.shift() };
+            console.log(this.endTime);
         }
     },
     update: function (buffer) {
         // Parse buffer direct from serial port
         //console.log(buffer);
-        s = buffer.toString();
+        s = buffer.toString()
         // TODO: Check format
         // Compare to regex and throw error if no match
-        this.round = s.slice(1, 3);
-        this.group = s.slice(4, 6);
-        this.rawType = s.slice(12, 14);
-        this.manageEndTimes(s.slice(7, 11));
+        this.round = s.slice(1, 3)
+        this.group = s.slice(4, 6)
+        const newType = s.slice(12, 14)
+        if (newType != this.raw) {
+            this.rawType = newType
+        }
+        
+        this.manageEndTimes(s.slice(7, 11))
+        // Push SSE
+        sendSlotToAll();
     }
 };
 
@@ -122,4 +127,50 @@ port.on('data', (data) => {
     runningSlot.update(data);
 });
 
-module.exports = runningSlot;
+
+const eventsRouter = require('express').Router({ mergeParams: true });
+
+// /api/events
+
+// Get competition list
+eventsRouter.get('/', async (req, res) => {
+    // Mandatory headers and http status to keep connection open
+    const headers = {
+        'Content-Type': 'text/event-stream',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache'
+    };
+    res.writeHead(200, headers);
+
+    // After client opens connection send all nests as string
+    const data = `data: ${JSON.stringify(runningSlot)}\n\n`;
+    res.write(data);
+
+    // Generate an id based on timestamp and save res
+    // object of client connection on clients list
+    // Later we'll iterate it and send updates to each client
+    const clientId = Date.now();
+    const newClient = {
+        id: clientId,
+        res
+    };
+    clients.push(newClient);
+
+    // When client closes connection we update the clients list
+    // avoiding the disconnected one
+    req.on('close', () => {
+        console.log(`${clientId} Connection closed`);
+        clients = clients.filter(c => c.id !== clientId);
+    });
+});
+
+function sendSlotToAll() {
+    console.log("Sending to", clients.length, "clients.")
+    //console.log(clients[0]);
+    //console.log(`${JSON.stringify(runningSlot)}\n\n`)
+    clients.forEach(c => c.res.write(`data: ${JSON.stringify(runningSlot)}\n\n`))
+}
+
+let clients = [];
+
+module.exports = { runningSlot, eventsRouter }

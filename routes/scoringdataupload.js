@@ -46,7 +46,7 @@ async function parseCSV(fileName, headers) {
 }
 
 async function CheckForData(CompID, FromRound, ToRound, res) {
-
+    console.log("###################CheckForData")
     const notDownloadedQuery = await models.Score
         .find({
             CompID: CompID,
@@ -55,7 +55,7 @@ async function CheckForData(CompID, FromRound, ToRound, res) {
             $and: [{ RoundNo: { $gte: FromRound } }, { RoundNo: { $lte: ToRound } }],
             Downloaded: false
         });
-    //console.log(notDownloadedQuery.length)
+    console.log(notDownloadedQuery.length)
     if (notDownloadedQuery.length > 0) {
         res.status(200).send("NeedsDownloading");
         return
@@ -354,7 +354,8 @@ router.get('/scoringdataupload.aspx', (req, res) => {
         Case "UploadTargetTimeByRound" : UploadTargetTimeByRound(CompID)
         Case "UploadF3KData" : UploadF3KData(CompID)
         Case "UploadLandingData" : UploadLandingData(CompID)    */
-
+    console.log('ID'+req.query.ID)
+    console.log('ACTION'+req.query.ACTION)
     const CompID = req.query.ID;
     const FromRound = parseInt(req.query.FR);
     const ToRound = parseInt(req.query.TR);

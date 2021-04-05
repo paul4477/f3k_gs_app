@@ -10,7 +10,7 @@ const models = require('../models/');
 // Get competition list
 compsRouter.get('/', async (req, res) => {
 
-    models.Competition.find({}, "CompID CompName CompVenue", (err, docs) => {
+    models.Competition.find({}, "CompID CompName CompVenue CompDate", (err, docs) => {
         if (err) {
             res.status(404).send(`DB find error: ${err.message}`);
         }
@@ -26,7 +26,7 @@ compsRouter.get('/', async (req, res) => {
 // Get single competition
 compsRouter.get('/:compID',
     async (req, res) => {
-        models.Competition.find({ CompID: req.params.compID }, "CompName CompVenue", (err, docs) => {
+        models.Competition.find({ CompID: req.params.compID }, "CompName CompVenue CompDate", (err, docs) => {
             if (err) {
                 res.status(404).send(`DB find error: ${err.message}`);
             }

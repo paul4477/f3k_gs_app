@@ -86,7 +86,10 @@
 
         if (realTime > event.target.maximum) { alert("Time entered exceeds maximum") };
 
+        console.log("scoreData was: ", scoreData)
+        scoreData[event.target.scoreIndex] = realTime;
         event.target.value = `${mins}:${secs}.${tenths}`;
+        console.log("scoreData is now: ", scoreData)
     }
 
 
@@ -102,11 +105,11 @@
 
         slotRow = document.querySelector('#countdown');
         slotTimer = new SlotTimer(slotRow, '/api/slotInfo');
-        slotTimer.updateSlotInfo();
+        //slotTimer.updateSlotInfo();
 
-        setInterval(() => {
+        /* setInterval(() => {
             slotTimer.updateSlotInfo()
-        }, refreshTime);
+        }, refreshTime); */
 
         // Add listener for group, round and type changes
         $(slotTimer).on("slotUpdated", (e) => {
@@ -119,18 +122,15 @@
         let url = new URL(window.location);
 
         const resultID = url.searchParams.get("result");
-        let results = null;
+
         //const rawTimes = null;
         //console.log(rawTimes);
 
         $.getJSON(`/api/slotScore/${resultID}`, (data) => {
 
-            //const results = data.result.times.filter(time => time.valid === true);
-            results = data;//.result;
 
-            //round = data.result.round;
-            //group = data.result.group;
-            //results =
+            results = data;
+            //console.log(results);
 
 
             output = document.querySelector('#results');
@@ -149,11 +149,18 @@
 
             function drawScores(data) {
                 scoreHolder = document.querySelector('#roundScores');
+
+                scoreData = data.map(x => x[0])
+                //console.log(data);
+                //console.log(scoreData);
                 if (data.length == 0) {
                     let noResults = document.createElement('div')
                     scoreHolder.appendChild(noResults);
                 }
+
+                let scoreIndex = 0;
                 while (data.length > 0) {
+
                     scoreInfo = data.shift();
                     let newResult = document.createElement('div');
                     score = scoreInfo[0];
@@ -167,6 +174,7 @@
                     scoreInput.inputmode = "numeric";
                     scoreInput.maximum = maximum;
                     $(scoreInput).on("focusin", (e) => { e.target.value = "" });
+                    scoreInput.scoreIndex = scoreIndex; // so we can identify when updating
                     $(scoreInput).on("change", validateTime);
 
                     newResult.appendChild(scoreInput);
@@ -181,10 +189,11 @@
                     //newResult.innerText = `${}, Max: ${formatTime(score[1], false)}`;
                     //newResult.id = "fullwidth";
                     scoreHolder.appendChild(newResult);
+                    scoreIndex += 1;
                 }
                 //document.querySelector('#roundScores').innerText = JSON.stringify(data);
             };
-
+            //console.log(JSON.stringify(results))
             $.ajax({
                 type: "POST",
                 url: "/api/tasks/score",
@@ -245,12 +254,33 @@
         $("#addPenalty").on("click", function () {
             dialog.dialog("open");
         });
+
+
+
     };
+
+    function putScores() {
+        console.log(results);
+        console.log(scoreData);
+        $.ajax({
+            type: "PUT",
+            url: `/api/comp/13D4Aa86ac9db/round/${results.round}/score/77`,
+            contentType: "application/json",
+            data: JSON.stringify(scoreData),
+
+            success: function (data) {
+                window.location.href = `/api/comp/13D4Aa86ac9db/round/${results.round}/score/77`
+            }
+        });
+    }
 
     // Startup...
 
     let slotTimer = null;
     let rawTimes = [];
+    let results = null;
+    // Data in a format useful for inserting into the GliderScore defined schema
+    let scoreData = [];
 
     window.requestAnimationFrame(step);
 </script>
@@ -314,7 +344,7 @@
         <!--<li><a href="javascript:window.history.back()" id="scoreButton">Back</a></li>-->
         <!--<li><a href="news.asp">Clear</a></li>-->
         <li style="float:right; border-left: 1px solid #bbb;">
-            <a href="settings.html">Submit</a>
+            <a href="javascript:putScores()">Submit</a>
         </li>
     </ul>
 

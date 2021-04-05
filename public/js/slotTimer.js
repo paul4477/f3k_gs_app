@@ -1,5 +1,5 @@
 const ts = timesync.create({
-  server: '/api/timesync',
+  server: 'http://localhost/api/timesync',
   interval: 23000
 });
 
@@ -22,14 +22,19 @@ function formatTime(time, showTenths = true) {
   else { return `${pad0(minutes, 2)}:${pad0(seconds, 2)}` }
 }
 
+const slotSource = new EventSource('http://localhost/api/events');
+
 function SlotTimer(output, uri) {
 
   this.canFly = false;
   this.slotLabel = null;
   this.dataSource = uri;
+  this.group = 0;
+  this.round = 0;
 
   // Page elements
   let countdown = output;
+
   let updating = true;
   //let dataSource = uri;
 
@@ -37,18 +42,35 @@ function SlotTimer(output, uri) {
 
   this.finishTime = Date.now();
 
-  this.updateSlotInfo = function () {
 
-    $.getJSON(this.dataSource, (data) => {
-      this.finishTime = new Date(data.endTime);
-      this.slotLabel = data.type;
-      this.group = data.group;
-      this.round = data.round;
-      this.canFly = data.canFly;
-      $(this).trigger("slotUpdated");
-    })
-      .done(() => { updating = false })
+
+  slotSource.onmessage = (event) => {
+    const parsedData = JSON.parse(event.data);
+    //console.log("Message: ", event.data);
+
+    this.finishTime = new Date(parsedData.endTime);
+    this.slotLabel = parsedData.type;
+    this.group = parsedData.group;
+    this.round = parsedData.round;
+    this.canFly = parsedData.canFly;
+    $(this).trigger("slotUpdated");
+
   };
+
+
+
+  /*   this.updateSlotInfo = function () {
+  
+      $.getJSON(this.dataSource, (data) => {
+        this.finishTime = new Date(data.endTime);
+        this.slotLabel = data.type;
+        this.group = data.group;
+        this.round = data.round;
+        this.canFly = data.canFly;
+        $(this).trigger("slotUpdated");
+      })
+        .done(() => { updating = false })
+    }; */
 
   this.step = async function (timestamp) {
     if (!this.finishTime) { //Not initialised
@@ -60,14 +82,11 @@ function SlotTimer(output, uri) {
       current = current / 1000; // convert to seconds
       if (current <= 0) { // Countdown has ended
         current = 0;
-        if (!updating) { // Update explicitly
-          updating = true;
-          setTimeout(() => { slotTimer.updateSlotInfo() }, 200);
-        }
       }
-      if (this.slotLabel == "Error" || this.slotLabel == "- - -") countdown.innerText = "--:--"
-      else countdown.innerText = formatTime(current, false);
     }
+    if (this.slotLabel == "Error" || this.slotLabel == "- - -") countdown.innerText = "--:--"
+    else countdown.innerText = formatTime(current, false);
   }
 }
+
 

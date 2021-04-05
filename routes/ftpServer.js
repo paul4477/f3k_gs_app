@@ -22,7 +22,7 @@ server.on('login', ({ connection, username, password }, resolve, reject) => {
         console.info(`FTP server: upload successfully received - ${fileName}`); 
       }); 
 
-      //console.log(connection);
+      //console.log(connection); 
   }); 
   
 server.on('client-error', ({ context, error }) => { 

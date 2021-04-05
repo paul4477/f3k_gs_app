@@ -10,11 +10,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.23.0/es6-shim.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.12.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <script src="/api/timesync/timesync.js"></script>
-    <script src="/js/pressure.js"></script>
-    <script src="/js/stopwatch.js"></script>
-    <script src="/js/slotTimer.js"></script>
-    <script src="/js/jquery.ui.touch-punch.min.js"></script>
+    <script src="http://localhost/api/timesync/timesync.js"></script>
+    <script src="http://localhost/js/pressure.js"></script>
+    <script src="http://localhost/js/stopwatch.js"></script>
+    <script src="http://localhost/js/slotTimer.js"></script>
+    <script src="http://localhost/js/jquery.ui.touch-punch.min.js"></script>
 
 
 
@@ -57,9 +57,9 @@
 
         slotRow = document.querySelector('#countdown');
         slotTimer = new SlotTimer(slotRow, '/api/slotInfo');
-        slotTimer.updateSlotInfo();
-        
-        setInterval(() => { slotTimer.updateSlotInfo() }, refreshTime);
+        //slotTimer.updateSlotInfo();
+
+        //setInterval(() => { slotTimer.updateSlotInfo() }, refreshTime);
 
         // Add listener for group, round and type changes
         $(slotTimer).on("slotUpdated", (e) => {

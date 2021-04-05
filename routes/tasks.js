@@ -244,7 +244,7 @@ var taskScorer = {
 
         if (task.ordered) {
             if (task.threshold) { //Ladder
-                tmpResults = rawTimes.filter(time => time.valid === true);
+                tmpResults = rawTimes.filter(item => item.valid === true);
                 tmpResults = tmpResults.map((item) => item.time);
                 tmpTargets = [...task.targets];
                 while (tmpResults.length > 0) {

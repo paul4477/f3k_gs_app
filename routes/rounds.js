@@ -35,7 +35,7 @@ roundsRouter.get('/', async (req, res) => {
 
 
 
-// Get single competition
+// Get single round
 roundsRouter.get('/:roundID', [check('roundID').isInt({ gt: 0 })], async (req, res) => {
 
     models.Competition.find({ CompID: req.params.compID }, (err, docs) => {

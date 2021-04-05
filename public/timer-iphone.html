@@ -141,10 +141,10 @@
 
         slotRow = document.querySelector('#countdown');
         slotTimer = new SlotTimer(slotRow, '/api/slotInfo');
-        slotTimer.updateSlotInfo();
-        setInterval(() => {
+        //slotTimer.updateSlotInfo();
+        /* setInterval(() => {
             slotTimer.updateSlotInfo()
-        }, refreshTime);
+        }, refreshTime); */
         // Add listener for group, round and type changes
         $(slotTimer).on("slotUpdated", (e) => {
             document.querySelector('#slotStatus').innerText = slotTimer.slotLabel;
@@ -233,13 +233,13 @@
             }
         }
     }
-    
+
     // Prompt user before leaving with unsubmitted results.
-    window.onbeforeunload = function(e) {
+    window.onbeforeunload = function (e) {
         if (stopwatch.running || stopwatch.results.length > 0) {
             return "Do you want to leave without submitting results?"; // Browser overrides message
         }
-        else{
+        else {
             delete e['returnValue']
             return;
         }

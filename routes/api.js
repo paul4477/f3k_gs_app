@@ -8,14 +8,14 @@ var timesyncServer = require('timesync/server');
 api.use('/timesync', timesyncServer.requestHandler);
 
 // slotInfo provided by serial port data
-const serialSlot = require('./serial');
+const { runningSlot, eventsRouter } = require('./serial');
 api.get('/slotInfo', (req, res) => {
-    res.send(serialSlot);
+    res.send(runningSlot);
 });
 
 api.get('/clock/:timerString', (req, res) => {
-    serialSlot.update(req.params.timerString);
-    res.status(200).send(serialSlot);
+    runningSlot.update(req.params.timerString);
+    res.status(200).send(runningSlot);
 });
 
 
@@ -26,7 +26,7 @@ api.post('/tasks/score', async (req, res) => {
     //console.log("Here")
     //console.log(parseInt(req.body.round));
 
-    const comp = await models.Competition.findById("5e4e58443e8f260a046f8f99");
+    const comp = await models.Competition.findById("5e555e26692f9563383002a7");
 
     // Database record is upper case with brackets
     let task = comp.rounds[parseInt(req.body.round) - 1]
@@ -64,7 +64,8 @@ api.get('/slotScore/:id', async (req, res) => {
 const comps = require('./comps');
 api.use('/comp', comps);
 
-
+const events = require('./events');
+api.use('/events', eventsRouter);
 
 
 

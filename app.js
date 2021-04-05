@@ -19,7 +19,7 @@ const logger = (req, res, next) => {
 }
 const app = express();
 //app.use(logger);
-app.use(morgan('tiny'));
+//app.use(morgan());
 app.use(cors());
 app.use(express.json());
 
